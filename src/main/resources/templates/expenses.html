@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Expenses')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('expenses')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Expenses')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1">Expenses</h2>
+                    <p>Fuel, insurance, repairs, parts and everything else you spend on your vehicles. Service visit costs are tracked on service records.</p>
+                </div>
+                <div class="page-head-actions">
+                    <a th:href="@{/expenses/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add expense</a>
+                </div>
+            </div>
+
+            <!-- Filters: GET /expenses?vehicleId=&expenseType=&from=&to=&q= -->
+            <form th:action="@{/expenses}" method="get" class="panel filter-bar" role="search" data-autosubmit>
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-3">
+                        <label for="vehicleId" class="form-label">Vehicle</label>
+                        <select id="vehicleId" name="vehicleId" class="form-select">
+                            <option value="">All vehicles</option>
+                            <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}"
+                                    th:selected="${v.id == selectedVehicleId}">Vehicle</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label for="expenseType" class="form-label">Expense type</label>
+                        <select id="expenseType" name="expenseType" class="form-select">
+                            <option value="">All types</option>
+                            <option th:each="t : ${expenseTypes}" th:value="${t}" th:text="${t.displayName}"
+                                    th:selected="${t == selectedType}">Type</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <label for="from" class="form-label">From</label>
+                        <input type="date" id="from" name="from" class="form-control" th:value="${from}">
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <label for="to" class="form-label">To</label>
+                        <input type="date" id="to" name="to" class="form-control" th:value="${to}">
+                    </div>
+                    <div class="col-lg-9">
+                        <label for="q" class="form-label">Search</label>
+                        <input type="search" id="q" name="q" th:value="${q}" class="form-control" placeholder="Search in description">
+                    </div>
+                    <div class="col-lg-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Apply</button>
+                        <a th:if="${filtersApplied}" th:href="@{/expenses}" class="btn btn-light">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            <p class="filter-summary" th:unless="${#lists.isEmpty(expenses)}">
+                <strong th:text="${#lists.size(expenses)}">0</strong> expense(s) ·
+                total <strong th:text="|₹${#numbers.formatDecimal(filteredTotal, 1, 'COMMA', 2, 'POINT')}|">₹0</strong>
+                <span th:if="${filtersApplied}">(filtered)</span>
+            </p>
+
+            <section class="panel">
+                <div th:if="${#lists.isEmpty(expenses)}" class="empty-state">
+                    <i class="bi bi-wallet2"></i>
+                    <h3 th:text="${filtersApplied} ? 'No expenses match these filters' : 'No expenses yet'">No expenses</h3>
+                    <p th:text="${filtersApplied} ? 'Try widening the date range or clearing a filter.' : 'Record fuel fills, insurance premiums, repairs and parts to see where the money goes.'">Text</p>
+                    <a th:if="${filtersApplied}" th:href="@{/expenses}" class="btn btn-light">Clear filters</a>
+                    <a th:unless="${filtersApplied}" th:href="@{/expenses/new}" class="btn btn-primary">Add expense</a>
+                </div>
+
+                <div class="table-responsive" th:unless="${#lists.isEmpty(expenses)}">
+                    <table class="table table-app table-stack align-middle">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="e : ${expenses}">
+                            <td data-label="Date" class="num" th:text="${#temporals.format(e.expenseDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                            <td data-label="Vehicle">
+                                <a th:href="@{/vehicles/{id}(id=${e.vehicle.id})}" class="plate plate-sm" th:text="${e.vehicle.registrationNumber}">REG</a>
+                            </td>
+                            <td data-label="Type"><span class="tag" th:text="${e.expenseType.displayName}">Fuel</span></td>
+                            <td data-label="Description" th:text="${e.description != null and !#strings.isEmpty(e.description)} ? ${e.description} : '—'">—</td>
+                            <td data-label="Amount" class="text-end num fw-semibold" th:text="|₹${#numbers.formatDecimal(e.amount, 1, 'COMMA', 2, 'POINT')}|">₹0</td>
+                            <td class="td-actions">
+                                <div class="table-actions">
+                                    <a th:href="@{/expenses/{id}/edit(id=${e.id})}" class="btn btn-light btn-icon btn-sm" title="Edit" aria-label="Edit expense">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/expenses/{id}/delete(id=${e.id})}" method="post"
+                                          th:data-confirm="|Delete this ${e.expenseType.displayName} expense of ₹${#numbers.formatDecimal(e.amount, 1, 'COMMA', 2, 'POINT')}?|"
+                                          data-confirm-title="Delete expense?">
+                                        <button type="submit" class="btn btn-light btn-icon btn-sm text-danger" title="Delete" aria-label="Delete expense">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

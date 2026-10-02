@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Log in')}"></head>
+<body class="auth-body">
+<div class="auth-shell">
+    <section class="auth-aside">
+        <a th:href="@{/login}" class="auth-brand">
+            <span class="brand-mark"><i class="bi bi-speedometer2"></i></span>
+            <span class="brand-text"><strong>Vehicle Service</strong><small>Reminder System</small></span>
+        </a>
+        <div class="auth-pitch">
+            <h2>Service dates, renewals and running costs for every vehicle you own.</h2>
+            <ul class="auth-points">
+                <li><i class="bi bi-bell"></i>Reminders by date, odometer reading, or both</li>
+                <li><i class="bi bi-shield-check"></i>Insurance and PUC certificate expiry tracking</li>
+                <li><i class="bi bi-graph-up"></i>Spending by vehicle, category and month</li>
+            </ul>
+        </div>
+        <span class="plate plate-xl" aria-hidden="true">KL 01 AB 1234</span>
+    </section>
+
+    <main class="auth-main">
+        <div class="auth-card">
+            <h1 class="auth-title">Log in</h1>
+            <p class="auth-subtitle">Use the email and password you registered with.</p>
+
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>Email or password is incorrect. Check both and try again.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success" role="status">
+                <i class="bi bi-check-circle-fill me-2"></i>You have been logged out.
+            </div>
+
+            <!-- Posted to /login, which Spring Security handles (see SecurityConfig) -->
+            <form th:action="@{/login}" th:object="${loginRequest}" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" autocomplete="username"
+                           placeholder="you@example.com" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control"
+                           autocomplete="current-password" required>
+                </div>
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" value="true">
+                    <label class="form-check-label" for="rememberMe">Keep me logged in for 14 days</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">Log in</button>
+            </form>
+
+            <p class="auth-switch">New here? <a th:href="@{/register}">Create an account</a></p>
+
+            <div class="demo-hint">
+                Loaded the sample data? Log in with <code>demo@vehicleservice.com</code> and password <code>demo1234</code>.
+            </div>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/validation.js}"></script>
+</body>
+</html>

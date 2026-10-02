@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${vehicle.registrationNumber})}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('vehicles')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Vehicle details')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <a th:href="@{/vehicles}" class="small d-inline-block mb-2"><i class="bi bi-arrow-left"></i> All vehicles</a>
+
+            <!-- Vehicle information -->
+            <section class="panel vehicle-hero">
+                <div class="vehicle-hero-top">
+                    <div>
+                        <span class="plate plate-lg" th:text="${vehicle.registrationNumber}">KL 01 AB 1234</span>
+                        <h2 th:text="${vehicle.makeAndModel}">Make Model</h2>
+                    </div>
+                    <div class="page-head-actions">
+                        <a th:href="@{/services/new(vehicleId=${vehicle.id})}" class="btn btn-primary">
+                            <i class="bi bi-wrench-adjustable me-1"></i>Log service
+                        </a>
+                        <a th:href="@{/reminders/new(vehicleId=${vehicle.id})}" class="btn btn-light">
+                            <i class="bi bi-bell me-1"></i>Reminder
+                        </a>
+                        <a th:href="@{/expenses/new(vehicleId=${vehicle.id})}" class="btn btn-light">
+                            <i class="bi bi-wallet2 me-1"></i>Expense
+                        </a>
+                        <a th:href="@{/vehicles/{id}/edit(id=${vehicle.id})}" class="btn btn-light btn-icon" title="Edit vehicle" aria-label="Edit vehicle">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{/vehicles/{id}/delete(id=${vehicle.id})}" method="post" class="d-inline"
+                              th:data-confirm="|Delete ${vehicle.registrationNumber}? All of its service records, reminders and expenses will also be deleted.|"
+                              data-confirm-title="Delete vehicle?">
+                            <button type="submit" class="btn btn-light btn-icon text-danger" title="Delete vehicle" aria-label="Delete vehicle">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <dl class="spec-grid">
+                    <div><dt>Year</dt><dd th:text="${vehicle.year}">2020</dd></div>
+                    <div><dt>Fuel</dt><dd th:text="${vehicle.fuelType.displayName}">Petrol</dd></div>
+                    <div><dt>Odometer</dt><dd class="num" th:text="|${#numbers.formatInteger(vehicle.currentMileage, 1, 'COMMA')} km|">0 km</dd></div>
+                    <div><dt>Colour</dt><dd th:text="${vehicle.color != null and !#strings.isEmpty(vehicle.color)} ? ${vehicle.color} : '—'">White</dd></div>
+                    <div><dt>Purchased</dt><dd th:text="${vehicle.purchaseDate != null} ? ${#temporals.format(vehicle.purchaseDate, 'dd MMM yyyy')} : '—'">—</dd></div>
+                    <div><dt>Other expenses</dt><dd class="num" th:text="|₹${#numbers.formatDecimal(expenseTotal, 1, 'COMMA', 2, 'POINT')}|">₹0</dd></div>
+                </dl>
+            </section>
+
+            <div class="row g-4">
+                <!-- Service history -->
+                <div class="col-xl-8">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Service history</h2>
+                            <span class="text-muted small" th:text="|${#lists.size(history)} service(s) · ₹${#numbers.formatDecimal(historyTotal, 1, 'COMMA', 2, 'POINT')}|">0 services</span>
+                        </div>
+
+                        <!-- History filters: GET /vehicles/{id}?serviceType=&from=&to= -->
+                        <form th:action="@{/vehicles/{id}(id=${vehicle.id})}" method="get" class="panel-body border-bottom">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-sm-4">
+                                    <label for="serviceType" class="form-label small text-muted">Service type</label>
+                                    <select id="serviceType" name="serviceType" class="form-select form-select-sm">
+                                        <option value="">All types</option>
+                                        <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.displayName}"
+                                                th:selected="${t == selectedServiceType}">Type</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-sm-3">
+                                    <label for="from" class="form-label small text-muted">From</label>
+                                    <input type="date" id="from" name="from" class="form-control form-control-sm" th:value="${from}">
+                                </div>
+                                <div class="col-6 col-sm-3">
+                                    <label for="to" class="form-label small text-muted">To</label>
+                                    <input type="date" id="to" name="to" class="form-control form-control-sm" th:value="${to}">
+                                </div>
+                                <div class="col-sm-2 d-flex gap-1">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-fill">Filter</button>
+                                    <a th:if="${filtersApplied}" th:href="@{/vehicles/{id}(id=${vehicle.id})}" class="btn btn-light btn-sm" title="Clear filters">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div th:if="${#lists.isEmpty(history)}" class="empty-state">
+                            <i class="bi bi-journal-text"></i>
+                            <h3 th:text="${filtersApplied} ? 'No services match these filters' : 'No services logged yet'">No services</h3>
+                            <p th:unless="${filtersApplied}">Every service you record for this vehicle appears here as a timeline.</p>
+                            <a th:unless="${filtersApplied}" th:href="@{/services/new(vehicleId=${vehicle.id})}" class="btn btn-primary">Log first service</a>
+                        </div>
+
+                        <div class="panel-body" th:unless="${#lists.isEmpty(history)}">
+                            <ol class="timeline">
+                                <li th:each="s : ${history}" class="timeline-item">
+                                    <div class="timeline-head">
+                                        <span class="timeline-date" th:text="${#temporals.format(s.serviceDate, 'dd MMM yyyy')}">01 Jan 2026</span>
+                                        <span class="timeline-cost num" th:text="|₹${#numbers.formatDecimal(s.cost, 1, 'COMMA', 2, 'POINT')}|">₹0</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="tag" th:text="${s.serviceType.displayName}">General Service</span>
+                                        <span><i class="bi bi-speedometer"></i> <span class="num" th:text="|${#numbers.formatInteger(s.mileage, 1, 'COMMA')} km|">0 km</span></span>
+                                        <span th:if="${s.serviceCenter}"><i class="bi bi-geo-alt"></i> <span th:text="${s.serviceCenter}">Center</span></span>
+                                        <span th:if="${s.nextServiceDate != null}"><i class="bi bi-arrow-right-circle"></i> Next:
+                                            <span th:text="${#temporals.format(s.nextServiceDate, 'dd MMM yyyy')}">date</span></span>
+                                        <a th:href="@{/services/{id}/edit(id=${s.id})}" class="ms-auto">Edit</a>
+                                    </div>
+                                    <p class="timeline-desc" th:if="${s.description}" th:text="${s.description}">Description</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Reminders for this vehicle -->
+                <div class="col-xl-4">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Reminders</h2>
+                            <span class="text-muted small" th:text="|${activeReminderCount} open|">0 open</span>
+                        </div>
+                        <div th:if="${#lists.isEmpty(reminders)}" class="empty-state">
+                            <i class="bi bi-bell"></i>
+                            <h3>No reminders</h3>
+                            <p>Insurance, PUC and registration renewals are good ones to start with.</p>
+                            <a th:href="@{/reminders/new(vehicleId=${vehicle.id})}" class="btn btn-light">Add reminder</a>
+                        </div>
+                        <ul class="reminder-list" th:unless="${#lists.isEmpty(reminders)}">
+                            <li th:each="r : ${reminders}" class="reminder-item"
+                                th:classappend="${r.status.name() == 'OVERDUE'} ? 'is-overdue' : (${r.status.name() == 'DUE_SOON'} ? 'is-due-soon')">
+                                <div class="reminder-main">
+                                    <a th:href="@{/reminders/{id}/edit(id=${r.id})}" class="reminder-title" th:text="${r.title}">Title</a>
+                                    <div class="reminder-meta"><span th:text="${r.reminderType.displayName}">Type</span></div>
+                                    <div th:replace="~{fragments/components :: reminderDue(${r})}"></div>
+                                </div>
+                                <span th:replace="~{fragments/components :: statusBadge(${r.status})}"></span>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

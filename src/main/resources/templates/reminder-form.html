@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${editMode} ? 'Edit reminder' : 'New reminder')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('reminders')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar(${editMode} ? 'Edit reminder' : 'New reminder')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <a th:href="@{/reminders}" class="small"><i class="bi bi-arrow-left"></i> Reminders</a>
+                    <h2 class="h4 mt-1 mb-1" th:text="${editMode} ? 'Edit reminder' : 'Create a reminder'">Create a reminder</h2>
+                    <p>Set a due date, a due odometer reading, or both. The status is calculated for you.</p>
+                </div>
+            </div>
+
+            <section class="panel form-panel">
+                <div class="panel-body">
+                    <form th:action="@{${formAction}}" th:object="${reminderForm}" method="post" class="needs-validation" novalidate>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="vehicleId" class="form-label">Vehicle<span class="req">*</span></label>
+                                <select th:field="*{vehicleId}" class="form-select" th:errorclass="is-invalid" required>
+                                    <option value="">Select vehicle</option>
+                                    <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}"
+                                            th:data-mileage="${v.currentMileage}">Vehicle</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="reminderType" class="form-label">Reminder type<span class="req">*</span></label>
+                                <select th:field="*{reminderType}" class="form-select" th:errorclass="is-invalid" data-title-source required>
+                                    <option value="">Select type</option>
+                                    <option th:each="t : ${reminderTypes}" th:value="${t}" th:text="${t.displayName}">Type</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('reminderType')}" th:errors="*{reminderType}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label for="title" class="form-label">Title<span class="req">*</span></label>
+                                <input type="text" th:field="*{title}" class="form-control" th:errorclass="is-invalid"
+                                       maxlength="150" placeholder="e.g. Insurance renewal" data-title-target required>
+                                <div class="form-text">Filled in from the type if left empty. You can edit it.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">When is it due?</h3>
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label for="dueDate" class="form-label">Due date</label>
+                                <input type="date" th:field="*{dueDate}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="dueMileage" class="form-label">Due at odometer (km)</label>
+                                <input type="number" th:field="*{dueMileage}" class="form-control" th:errorclass="is-invalid"
+                                       min="1" step="1" placeholder="e.g. 40000">
+                                <div class="form-text" id="dueMileageHint"></div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dueMileage')}" th:errors="*{dueMileage}"></div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-text mt-0"><i class="bi bi-info-circle me-1"></i>Enter at least one of these.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Notes</label>
+                            <textarea th:field="*{description}" class="form-control" th:errorclass="is-invalid" rows="3"
+                                      maxlength="1000" placeholder="Policy number, agent contact, anything useful..."></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                        </div>
+
+                        <div class="form-check" th:if="${editMode}">
+                            <input type="checkbox" th:field="*{completed}" class="form-check-input">
+                            <label class="form-check-label" th:for="${#ids.prev('completed')}">Mark as completed</label>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="@{/reminders}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary" th:text="${editMode} ? 'Save changes' : 'Create reminder'">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

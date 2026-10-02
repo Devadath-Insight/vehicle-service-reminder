@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${editMode} ? 'Edit expense' : 'Add expense')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('expenses')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar(${editMode} ? 'Edit expense' : 'Add expense')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <a th:href="@{/expenses}" class="small"><i class="bi bi-arrow-left"></i> Expenses</a>
+                    <h2 class="h4 mt-1 mb-1" th:text="${editMode} ? 'Edit expense' : 'Add an expense'">Add an expense</h2>
+                    <p>Fields marked <span class="req">*</span> are required.</p>
+                </div>
+            </div>
+
+            <section class="panel form-panel">
+                <div class="panel-body">
+                    <form th:action="@{${formAction}}" th:object="${expenseForm}" method="post" class="needs-validation" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="vehicleId" class="form-label">Vehicle<span class="req">*</span></label>
+                                <select th:field="*{vehicleId}" class="form-select" th:errorclass="is-invalid" required>
+                                    <option value="">Select vehicle</option>
+                                    <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}">Vehicle</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expenseType" class="form-label">Expense type<span class="req">*</span></label>
+                                <select th:field="*{expenseType}" class="form-select" th:errorclass="is-invalid" required>
+                                    <option value="">Select type</option>
+                                    <option th:each="t : ${expenseTypes}" th:value="${t}" th:text="${t.displayName}">Type</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('expenseType')}" th:errors="*{expenseType}"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="amount" class="form-label">Amount (₹)<span class="req">*</span></label>
+                                <div class="input-group has-validation">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" th:field="*{amount}" class="form-control" th:errorclass="is-invalid"
+                                           min="0.01" step="0.01" placeholder="0.00" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="expenseDate" class="form-label">Date<span class="req">*</span></label>
+                                <input type="date" th:field="*{expenseDate}" class="form-control" th:errorclass="is-invalid" data-max-today required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea th:field="*{description}" class="form-control" th:errorclass="is-invalid" rows="3"
+                                          maxlength="500" placeholder="e.g. Full tank at HP, Pattom"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="@{/expenses}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary" th:text="${editMode} ? 'Save changes' : 'Add expense'">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

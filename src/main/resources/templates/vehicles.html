@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('My Vehicles')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('vehicles')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('My Vehicles')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1">Garage</h2>
+                    <p th:text="${totalVehicles == 1} ? '1 vehicle registered to your account.' : |${totalVehicles} vehicles registered to your account.|">0 vehicles</p>
+                </div>
+                <div class="page-head-actions">
+                    <a th:href="@{/vehicles/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add vehicle</a>
+                </div>
+            </div>
+
+            <!-- Search (GET /vehicles?q=...) -->
+            <form th:action="@{/vehicles}" method="get" class="panel filter-bar" role="search" th:if="${totalVehicles > 0}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-8 col-lg-6">
+                        <label for="q" class="form-label">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="search" id="q" name="q" th:value="${q}" class="form-control"
+                                   placeholder="Registration number, make or model">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a th:if="${q != null and !#strings.isEmpty(q)}" th:href="@{/vehicles}" class="btn btn-light">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            <p class="filter-summary" th:if="${q != null and !#strings.isEmpty(q)}">
+                <strong th:text="${#lists.size(vehicles)}">0</strong> result(s) for "<span th:text="${q}">q</span>"
+            </p>
+
+            <!-- Empty states -->
+            <section class="panel" th:if="${totalVehicles == 0}">
+                <div class="empty-state">
+                    <i class="bi bi-car-front"></i>
+                    <h3>No vehicles yet</h3>
+                    <p>Add a car, bike or scooter to start tracking its services, reminders and expenses.</p>
+                    <a th:href="@{/vehicles/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add vehicle</a>
+                </div>
+            </section>
+            <section class="panel" th:if="${totalVehicles > 0 and #lists.isEmpty(vehicles)}">
+                <div class="empty-state">
+                    <i class="bi bi-search"></i>
+                    <h3>No matching vehicles</h3>
+                    <p>Try part of the registration number, or the make or model name.</p>
+                    <a th:href="@{/vehicles}" class="btn btn-light">Show all vehicles</a>
+                </div>
+            </section>
+
+            <!-- Vehicle cards -->
+            <div class="vehicle-grid" th:unless="${#lists.isEmpty(vehicles)}">
+                <article th:each="v : ${vehicles}" class="panel vehicle-card">
+                    <div class="vehicle-card-top">
+                        <span class="plate" th:text="${v.registrationNumber}">KL 01 AB 1234</span>
+                        <span class="tag" th:text="${v.fuelType.displayName}">Petrol</span>
+                    </div>
+                    <h3 class="vehicle-name">
+                        <a th:href="@{/vehicles/{id}(id=${v.id})}" th:text="${v.makeAndModel}">Make Model</a>
+                    </h3>
+                    <dl class="vehicle-specs">
+                        <div><dt>Year</dt><dd th:text="${v.year}">2020</dd></div>
+                        <div><dt>Odometer</dt><dd th:text="|${#numbers.formatInteger(v.currentMileage, 1, 'COMMA')} km|">0 km</dd></div>
+                        <div><dt>Colour</dt><dd th:text="${v.color != null and !#strings.isEmpty(v.color)} ? ${v.color} : '—'">White</dd></div>
+                    </dl>
+                    <div class="vehicle-card-actions">
+                        <a th:href="@{/vehicles/{id}(id=${v.id})}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>View
+                        </a>
+                        <a th:href="@{/vehicles/{id}/edit(id=${v.id})}" class="btn btn-light btn-sm">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </a>
+                        <form th:action="@{/vehicles/{id}/delete(id=${v.id})}" method="post"
+                              th:data-confirm="|Delete ${v.registrationNumber}? All of its service records, reminders and expenses will also be deleted.|"
+                              data-confirm-title="Delete vehicle?">
+                            <button type="submit" class="btn btn-light btn-sm text-danger">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

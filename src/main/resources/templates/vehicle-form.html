@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${editMode} ? 'Edit vehicle' : 'Add vehicle')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('vehicles')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar(${editMode} ? 'Edit vehicle' : 'Add vehicle')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <a th:href="${editMode} ? @{/vehicles/{id}(id=${vehicleId})} : @{/vehicles}" class="small">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <h2 class="h4 mt-1 mb-1" th:text="${editMode} ? 'Edit vehicle details' : 'Add a vehicle'">Add a vehicle</h2>
+                    <p>Fields marked <span class="req">*</span> are required.</p>
+                </div>
+            </div>
+
+            <section class="panel form-panel">
+                <div class="panel-body">
+                    <form th:action="@{${formAction}}" th:object="${vehicleForm}" method="post" class="needs-validation" novalidate>
+
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+                        </div>
+
+                        <h3 class="form-section-title">Identification</h3>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="registrationNumber" class="form-label">Registration number<span class="req">*</span></label>
+                                <input type="text" th:field="*{registrationNumber}" class="form-control" th:errorclass="is-invalid"
+                                       placeholder="KL 01 AB 1234" maxlength="20" pattern="^[A-Za-z0-9 \-]+$" data-uppercase required>
+                                <div class="form-text">Letters, numbers, spaces and hyphens. Saved in capitals.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('registrationNumber')}" th:errors="*{registrationNumber}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fuelType" class="form-label">Fuel type<span class="req">*</span></label>
+                                <select th:field="*{fuelType}" class="form-select" th:errorclass="is-invalid" required>
+                                    <option value="">Select fuel type</option>
+                                    <option th:each="f : ${fuelTypes}" th:value="${f}" th:text="${f.displayName}">Petrol</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('fuelType')}" th:errors="*{fuelType}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="make" class="form-label">Make<span class="req">*</span></label>
+                                <input type="text" th:field="*{make}" class="form-control" th:errorclass="is-invalid"
+                                       placeholder="Maruti Suzuki" maxlength="50" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('make')}" th:errors="*{make}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="model" class="form-label">Model<span class="req">*</span></label>
+                                <input type="text" th:field="*{model}" class="form-control" th:errorclass="is-invalid"
+                                       placeholder="Swift" maxlength="50" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('model')}" th:errors="*{model}"></div>
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Details</h3>
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="year" class="form-label">Year<span class="req">*</span></label>
+                                <input type="number" th:field="*{year}" class="form-control" th:errorclass="is-invalid"
+                                       min="1950" max="2100" step="1" placeholder="2021" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="currentMileage" class="form-label">Current odometer (km)<span class="req">*</span></label>
+                                <input type="number" th:field="*{currentMileage}" class="form-control" th:errorclass="is-invalid"
+                                       min="0" max="2000000" step="1" placeholder="25000" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('currentMileage')}" th:errors="*{currentMileage}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="color" class="form-label">Colour</label>
+                                <input type="text" th:field="*{color}" class="form-control" th:errorclass="is-invalid"
+                                       placeholder="Pearl White" maxlength="30">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('color')}" th:errors="*{color}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="purchaseDate" class="form-label">Purchase date</label>
+                                <input type="date" th:field="*{purchaseDate}" class="form-control" th:errorclass="is-invalid" data-max-today>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('purchaseDate')}" th:errors="*{purchaseDate}"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="${editMode} ? @{/vehicles/{id}(id=${vehicleId})} : @{/vehicles}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary" th:text="${editMode} ? 'Save changes' : 'Add vehicle'">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

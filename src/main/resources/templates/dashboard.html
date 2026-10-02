@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Dashboard')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Dashboard')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1" th:text="|Hello, ${currentUser.fullName}|">Hello</h2>
+                    <p>Here is what your vehicles need next.</p>
+                </div>
+                <div class="page-head-actions">
+                    <a th:href="@{/services/new}" class="btn btn-light"><i class="bi bi-wrench-adjustable me-1"></i>Log service</a>
+                    <a th:href="@{/reminders/new}" class="btn btn-primary"><i class="bi bi-bell me-1"></i>New reminder</a>
+                </div>
+            </div>
+
+            <!-- Statistic cards -->
+            <section class="stat-grid" aria-label="Summary">
+                <div class="stat-card">
+                    <span class="stat-icon"><i class="bi bi-car-front"></i></span>
+                    <div>
+                        <div class="stat-label">Total vehicles</div>
+                        <div class="stat-value num" th:text="${totalVehicles}">0</div>
+                        <div class="stat-note"><a th:href="@{/vehicles}">View garage</a></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon is-warning"><i class="bi bi-calendar-check"></i></span>
+                    <div>
+                        <div class="stat-label">Upcoming</div>
+                        <div class="stat-value num" th:text="${upcomingCount}">0</div>
+                        <div class="stat-note" th:text="|${dueSoonCount} due within 30 days|">0 due soon</div>
+                    </div>
+                </div>
+                <div class="stat-card" th:classappend="${overdueCount > 0} ? 'is-alert'">
+                    <span class="stat-icon is-danger"><i class="bi bi-exclamation-octagon"></i></span>
+                    <div>
+                        <div class="stat-label">Overdue</div>
+                        <div class="stat-value num" th:text="${overdueCount}">0</div>
+                        <div class="stat-note" th:text="${overdueCount > 0} ? 'Needs attention' : 'All caught up'">All caught up</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon is-success"><i class="bi bi-currency-rupee"></i></span>
+                    <div>
+                        <div class="stat-label">Total expense</div>
+                        <div class="stat-value num" th:text="|₹${#numbers.formatDecimal(totalExpense, 1, 'COMMA', 0, 'POINT')}|">₹0</div>
+                        <div class="stat-note" th:text="|${serviceCount} service visits + other expenses|">0 services</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- No vehicles yet -->
+            <section class="panel" th:if="${totalVehicles == 0}">
+                <div class="empty-state">
+                    <i class="bi bi-car-front"></i>
+                    <h3>Add your first vehicle</h3>
+                    <p>Once a vehicle is added you can log services, set reminders for insurance, PUC and oil changes, and track every rupee spent.</p>
+                    <a th:href="@{/vehicles/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add vehicle</a>
+                </div>
+            </section>
+
+            <!-- Garage strip -->
+            <section class="garage-strip" th:if="${totalVehicles > 0}" aria-label="Your vehicles">
+                <a th:each="v : ${vehicles}" th:href="@{/vehicles/{id}(id=${v.id})}" class="garage-item">
+                    <span class="plate plate-sm" th:text="${v.registrationNumber}">KL 01 AB 1234</span>
+                    <span>
+                        <strong th:text="${v.makeAndModel}">Make Model</strong>
+                        <small th:text="|${#numbers.formatInteger(v.currentMileage, 1, 'COMMA')} km|">0 km</small>
+                    </span>
+                </a>
+            </section>
+
+            <div class="row g-4">
+                <!-- Reminders -->
+                <div class="col-xl-7">
+                    <section class="panel h-100">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Reminders</h2>
+                            <a th:href="@{/reminders}" class="panel-link">All reminders</a>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(overdueReminders) and #lists.isEmpty(upcomingReminders)}" class="empty-state">
+                            <i class="bi bi-bell-slash"></i>
+                            <h3>No open reminders</h3>
+                            <p>Create reminders for services, insurance renewal or PUC so nothing slips.</p>
+                        </div>
+
+                        <th:block th:unless="${#lists.isEmpty(overdueReminders)}">
+                            <div class="list-group-label">Overdue</div>
+                            <ul class="reminder-list">
+                                <li th:each="r : ${overdueReminders}" class="reminder-item is-overdue">
+                                    <div class="reminder-main">
+                                        <a th:href="@{/reminders/{id}/edit(id=${r.id})}" class="reminder-title" th:text="${r.title}">Title</a>
+                                        <div class="reminder-meta">
+                                            <span class="plate plate-sm" th:text="${r.vehicle.registrationNumber}">REG</span>
+                                            <span th:text="${r.reminderType.displayName}">Type</span>
+                                        </div>
+                                        <div th:replace="~{fragments/components :: reminderDue(${r})}"></div>
+                                    </div>
+                                    <span th:replace="~{fragments/components :: statusBadge(${r.status})}"></span>
+                                </li>
+                            </ul>
+                        </th:block>
+
+                        <th:block th:unless="${#lists.isEmpty(upcomingReminders)}">
+                            <div class="list-group-label">Coming up</div>
+                            <ul class="reminder-list">
+                                <li th:each="r : ${upcomingReminders}" class="reminder-item"
+                                    th:classappend="${r.status.name() == 'DUE_SOON'} ? 'is-due-soon'">
+                                    <div class="reminder-main">
+                                        <a th:href="@{/reminders/{id}/edit(id=${r.id})}" class="reminder-title" th:text="${r.title}">Title</a>
+                                        <div class="reminder-meta">
+                                            <span class="plate plate-sm" th:text="${r.vehicle.registrationNumber}">REG</span>
+                                            <span th:text="${r.reminderType.displayName}">Type</span>
+                                        </div>
+                                        <div th:replace="~{fragments/components :: reminderDue(${r})}"></div>
+                                    </div>
+                                    <span th:replace="~{fragments/components :: statusBadge(${r.status})}"></span>
+                                </li>
+                            </ul>
+                        </th:block>
+                    </section>
+                </div>
+
+                <!-- Monthly spend chart -->
+                <div class="col-xl-5">
+                    <section class="panel h-100">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Spend, last 6 months</h2>
+                            <a th:href="@{/reports}" class="panel-link">Reports</a>
+                        </div>
+                        <div class="panel-body">
+                            <div class="chart-box">
+                                <canvas id="monthlyChart" aria-label="Monthly maintenance expense chart" role="img"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Recent services -->
+                <div class="col-xl-7">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Recent services</h2>
+                            <a th:href="@{/services}" class="panel-link">All services</a>
+                        </div>
+                        <div th:if="${#lists.isEmpty(recentServices)}" class="empty-state">
+                            <i class="bi bi-wrench-adjustable"></i>
+                            <h3>No services logged</h3>
+                            <p>Log a service visit to start building each vehicle's history.</p>
+                        </div>
+                        <div class="table-responsive" th:unless="${#lists.isEmpty(recentServices)}">
+                            <table class="table table-app table-stack align-middle">
+                                <thead>
+                                <tr><th>Date</th><th>Vehicle</th><th>Service</th><th class="text-end">Cost</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="s : ${recentServices}">
+                                    <td data-label="Date" class="num" th:text="${#temporals.format(s.serviceDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                                    <td data-label="Vehicle"><span class="plate plate-sm" th:text="${s.vehicle.registrationNumber}">REG</span></td>
+                                    <td data-label="Service">
+                                        <span th:text="${s.serviceType.displayName}">Type</span>
+                                        <span class="cell-sub" th:if="${s.serviceCenter}" th:text="${s.serviceCenter}">Center</span>
+                                    </td>
+                                    <td data-label="Cost" class="text-end num fw-semibold"
+                                        th:text="|₹${#numbers.formatDecimal(s.cost, 1, 'COMMA', 2, 'POINT')}|">₹0.00</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Recent expenses -->
+                <div class="col-xl-5">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Recent expenses</h2>
+                            <a th:href="@{/expenses}" class="panel-link">All expenses</a>
+                        </div>
+                        <div th:if="${#lists.isEmpty(recentExpenses)}" class="empty-state">
+                            <i class="bi bi-wallet2"></i>
+                            <h3>No expenses yet</h3>
+                            <p>Fuel, insurance, repairs and parts all go here.</p>
+                        </div>
+                        <ul class="money-list" th:unless="${#lists.isEmpty(recentExpenses)}">
+                            <li th:each="e : ${recentExpenses}">
+                                <div>
+                                    <strong th:text="${e.expenseType.displayName}">Fuel</strong>
+                                    <span class="cell-sub" th:text="|${e.vehicle.registrationNumber} · ${#temporals.format(e.expenseDate, 'dd MMM yyyy')}|">REG · date</span>
+                                </div>
+                                <span class="money num" th:text="|₹${#numbers.formatDecimal(e.amount, 1, 'COMMA', 2, 'POINT')}|">₹0.00</span>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    window.chartData = {
+        monthlyLabels: /*[[${monthlyLabels}]]*/ [],
+        monthlyValues: /*[[${monthlyValues}]]*/ []
+    };
+</script>
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

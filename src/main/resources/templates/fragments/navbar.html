@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Top bar with page title and user menu. Usage: th:replace="~{fragments/navbar :: navbar('Dashboard')}" -->
+<header th:fragment="navbar(pageTitle)" class="app-topbar">
+    <button type="button" class="sidebar-toggle d-lg-none" data-sidebar-toggle aria-label="Open menu" aria-controls="appSidebar">
+        <i class="bi bi-list"></i>
+    </button>
+    <h1 class="topbar-title" th:text="${pageTitle}">Page</h1>
+
+    <div class="dropdown" th:if="${currentUser != null}">
+        <button class="user-chip dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar" th:text="${currentUser.initial}">S</span>
+            <span class="d-none d-sm-inline" th:text="${currentUser.fullName}">User</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><span class="dropdown-item-text text-muted small" th:text="${currentUser.email}">email</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-person me-2"></i>Profile</a></li>
+            <li>
+                <form th:action="@{/logout}" method="post">
+                    <button class="dropdown-item" type="submit"><i class="bi bi-box-arrow-left me-2"></i>Log out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</header>
+</body>
+</html>

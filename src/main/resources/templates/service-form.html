@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${editMode} ? 'Edit service record' : 'Log service')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('services')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar(${editMode} ? 'Edit service record' : 'Log service')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <a th:href="@{/services}" class="small"><i class="bi bi-arrow-left"></i> Service records</a>
+                    <h2 class="h4 mt-1 mb-1" th:text="${editMode} ? 'Edit service record' : 'Log a service visit'">Log a service visit</h2>
+                    <p>Fields marked <span class="req">*</span> are required.</p>
+                </div>
+            </div>
+
+            <section class="panel form-panel">
+                <div class="panel-body">
+                    <form th:action="@{${formAction}}" th:object="${serviceForm}" method="post" class="needs-validation" novalidate>
+
+                        <h3 class="form-section-title">Service</h3>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="vehicleId" class="form-label">Vehicle<span class="req">*</span></label>
+                                <select th:field="*{vehicleId}" class="form-select" th:errorclass="is-invalid" data-mileage-source required>
+                                    <option value="">Select vehicle</option>
+                                    <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}"
+                                            th:data-mileage="${v.currentMileage}">Vehicle</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="serviceType" class="form-label">Service type<span class="req">*</span></label>
+                                <select th:field="*{serviceType}" class="form-select" th:errorclass="is-invalid" required>
+                                    <option value="">Select service type</option>
+                                    <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.displayName}">Type</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('serviceType')}" th:errors="*{serviceType}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <label for="serviceDate" class="form-label">Service date<span class="req">*</span></label>
+                                <input type="date" th:field="*{serviceDate}" class="form-control" th:errorclass="is-invalid" data-max-today required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('serviceDate')}" th:errors="*{serviceDate}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <label for="mileage" class="form-label">Odometer at service (km)<span class="req">*</span></label>
+                                <input type="number" th:field="*{mileage}" class="form-control" th:errorclass="is-invalid"
+                                       min="0" step="1" data-mileage-target required>
+                                <div class="form-text" id="mileageHint">Filled from the vehicle's current reading. Change it if needed.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('mileage')}" th:errors="*{mileage}"></div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <label for="cost" class="form-label">Cost (₹)<span class="req">*</span></label>
+                                <div class="input-group has-validation">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" th:field="*{cost}" class="form-control" th:errorclass="is-invalid"
+                                           min="0" step="0.01" placeholder="0.00" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('cost')}" th:errors="*{cost}"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-12">
+                                <label for="serviceCenter" class="form-label">Service center</label>
+                                <input type="text" th:field="*{serviceCenter}" class="form-control" th:errorclass="is-invalid"
+                                       maxlength="150" placeholder="e.g. Popular Maruti, Kochi">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('serviceCenter')}" th:errors="*{serviceCenter}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Work done / notes</label>
+                                <textarea th:field="*{description}" class="form-control" th:errorclass="is-invalid" rows="3"
+                                          maxlength="1000" placeholder="Engine oil and filter replaced, brake pads checked..."></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Next service <span class="text-muted fw-normal small">(optional)</span></h3>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="nextServiceDate" class="form-label">Next service date</label>
+                                <input type="date" th:field="*{nextServiceDate}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nextServiceDate')}" th:errors="*{nextServiceDate}"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="nextServiceMileage" class="form-label">Next service at (km)</label>
+                                <input type="number" th:field="*{nextServiceMileage}" class="form-control" th:errorclass="is-invalid"
+                                       min="1" step="1" placeholder="e.g. 35000">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nextServiceMileage')}" th:errors="*{nextServiceMileage}"></div>
+                            </div>
+                            <div class="col-12" th:unless="${editMode}">
+                                <div class="form-check">
+                                    <input type="checkbox" th:field="*{createReminder}" class="form-check-input">
+                                    <label class="form-check-label" th:for="${#ids.prev('createReminder')}">
+                                        Create a reminder for the next service
+                                    </label>
+                                    <div class="form-text mt-0">Only used when a next service date or mileage is entered.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="@{/services}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary" th:text="${editMode} ? 'Save changes' : 'Save service record'">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Reminders')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('reminders')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Reminders')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1">Maintenance reminders</h2>
+                    <p>Status updates automatically: due within 30 days (or 500 km) is <strong>Due soon</strong>, past the date or reading is <strong>Overdue</strong>.</p>
+                </div>
+                <div class="page-head-actions">
+                    <a th:href="@{/reminders/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New reminder</a>
+                </div>
+            </div>
+
+            <!-- Status tabs with counts (keeps the vehicle/type filters) -->
+            <nav class="status-tabs" aria-label="Filter by status">
+                <a th:href="@{/reminders(vehicleId=${selectedVehicleId}, reminderType=${selectedType})}"
+                   class="status-tab" th:classappend="${selectedStatus == null} ? 'active'">
+                    All <span class="count" th:text="${#aggregates.sum(statusCounts.values())}">0</span>
+                </a>
+                <a th:each="s : ${statuses}"
+                   th:href="@{/reminders(vehicleId=${selectedVehicleId}, status=${s}, reminderType=${selectedType})}"
+                   class="status-tab" th:classappend="${s == selectedStatus} ? 'active'">
+                    <span th:text="${s.displayName}">Status</span>
+                    <span class="count" th:text="${statusCounts.get(s)}">0</span>
+                </a>
+            </nav>
+
+            <!-- Filters: GET /reminders?vehicleId=&status=&reminderType= -->
+            <form th:action="@{/reminders}" method="get" class="panel filter-bar" data-autosubmit>
+                <input type="hidden" name="status" th:if="${selectedStatus != null}" th:value="${selectedStatus}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-4">
+                        <label for="vehicleId" class="form-label">Vehicle</label>
+                        <select id="vehicleId" name="vehicleId" class="form-select">
+                            <option value="">All vehicles</option>
+                            <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}"
+                                    th:selected="${v.id == selectedVehicleId}">Vehicle</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                        <label for="reminderType" class="form-label">Reminder type</label>
+                        <select id="reminderType" name="reminderType" class="form-select">
+                            <option value="">All types</option>
+                            <option th:each="t : ${reminderTypes}" th:value="${t}" th:text="${t.displayName}"
+                                    th:selected="${t == selectedType}">Type</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Apply</button>
+                        <a th:if="${filtersApplied}" th:href="@{/reminders}" class="btn btn-light">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            <section class="panel">
+                <div th:if="${#lists.isEmpty(reminders)}" class="empty-state">
+                    <i class="bi bi-bell"></i>
+                    <h3 th:text="${filtersApplied} ? 'No reminders match these filters' : 'No reminders yet'">No reminders</h3>
+                    <p th:text="${filtersApplied} ? 'Try another status or vehicle.' : 'Set reminders for services, insurance renewal, PUC certificate, tyres or battery.'">Text</p>
+                    <a th:unless="${filtersApplied}" th:href="@{/reminders/new}" class="btn btn-primary">Create reminder</a>
+                </div>
+
+                <div class="table-responsive" th:unless="${#lists.isEmpty(reminders)}">
+                    <table class="table table-app table-stack align-middle">
+                        <thead>
+                        <tr>
+                            <th>Reminder</th>
+                            <th>Vehicle</th>
+                            <th>Due</th>
+                            <th>Basis</th>
+                            <th>Status</th>
+                            <th class="text-end"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${reminders}">
+                            <td data-label="Reminder">
+                                <strong th:text="${r.title}">Title</strong>
+                                <span class="cell-sub" th:text="${r.reminderType.displayName}">Type</span>
+                            </td>
+                            <td data-label="Vehicle">
+                                <a th:href="@{/vehicles/{id}(id=${r.vehicle.id})}" class="plate plate-sm" th:text="${r.vehicle.registrationNumber}">REG</a>
+                            </td>
+                            <td data-label="Due"><div th:replace="~{fragments/components :: reminderDue(${r})}"></div></td>
+                            <td data-label="Basis" th:text="${r.basis}">Date</td>
+                            <td data-label="Status"><span th:replace="~{fragments/components :: statusBadge(${r.status})}"></span></td>
+                            <td class="td-actions">
+                                <div class="table-actions">
+                                    <form th:if="${r.status.active}" th:action="@{/reminders/{id}/complete(id=${r.id})}" method="post">
+                                        <button type="submit" class="btn btn-light btn-sm text-success" title="Mark as completed">
+                                            <i class="bi bi-check2-circle me-1"></i>Done
+                                        </button>
+                                    </form>
+                                    <form th:unless="${r.status.active}" th:action="@{/reminders/{id}/reopen(id=${r.id})}" method="post">
+                                        <button type="submit" class="btn btn-light btn-sm" title="Reopen reminder">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reopen
+                                        </button>
+                                    </form>
+                                    <a th:href="@{/reminders/{id}/edit(id=${r.id})}" class="btn btn-light btn-icon btn-sm" title="Edit" aria-label="Edit reminder">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/reminders/{id}/delete(id=${r.id})}" method="post"
+                                          th:data-confirm="|Delete the reminder '${r.title}'?|" data-confirm-title="Delete reminder?">
+                                        <button type="submit" class="btn btn-light btn-icon btn-sm text-danger" title="Delete" aria-label="Delete reminder">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Service Records')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('services')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Service Records')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1">Service records</h2>
+                    <p>Every workshop visit across all your vehicles.</p>
+                </div>
+                <div class="page-head-actions">
+                    <a th:href="@{/services/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Log service</a>
+                </div>
+            </div>
+
+            <!-- Filters: GET /services?vehicleId=&serviceType=&from=&to=&q=&sort= -->
+            <form th:action="@{/services}" method="get" class="panel filter-bar" role="search" data-autosubmit>
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-3">
+                        <label for="vehicleId" class="form-label">Vehicle</label>
+                        <select id="vehicleId" name="vehicleId" class="form-select">
+                            <option value="">All vehicles</option>
+                            <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.displayName}"
+                                    th:selected="${v.id == selectedVehicleId}">Vehicle</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-2">
+                        <label for="serviceType" class="form-label">Service type</label>
+                        <select id="serviceType" name="serviceType" class="form-select">
+                            <option value="">All types</option>
+                            <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.displayName}"
+                                    th:selected="${t == selectedServiceType}">Type</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label for="from" class="form-label">From</label>
+                        <input type="date" id="from" name="from" class="form-control" th:value="${from}">
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label for="to" class="form-label">To</label>
+                        <input type="date" id="to" name="to" class="form-control" th:value="${to}">
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label for="sort" class="form-label">Sort by</label>
+                        <select id="sort" name="sort" class="form-select">
+                            <option value="date_desc" th:selected="${sort == 'date_desc'}">Newest first</option>
+                            <option value="date_asc" th:selected="${sort == 'date_asc'}">Oldest first</option>
+                            <option value="cost_desc" th:selected="${sort == 'cost_desc'}">Cost: high to low</option>
+                            <option value="cost_asc" th:selected="${sort == 'cost_asc'}">Cost: low to high</option>
+                            <option value="mileage_desc" th:selected="${sort == 'mileage_desc'}">Mileage: high to low</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-9">
+                        <label for="q" class="form-label">Search</label>
+                        <input type="search" id="q" name="q" th:value="${q}" class="form-control"
+                               placeholder="Service center or description">
+                    </div>
+                    <div class="col-lg-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Apply</button>
+                        <a th:if="${filtersApplied}" th:href="@{/services}" class="btn btn-light">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            <p class="filter-summary" th:unless="${#lists.isEmpty(records)}">
+                <strong th:text="${#lists.size(records)}">0</strong> record(s) ·
+                total <strong th:text="|₹${#numbers.formatDecimal(filteredTotal, 1, 'COMMA', 2, 'POINT')}|">₹0</strong>
+                <span th:if="${filtersApplied}">(filtered)</span>
+            </p>
+
+            <section class="panel">
+                <div th:if="${#lists.isEmpty(records)}" class="empty-state">
+                    <i class="bi bi-wrench-adjustable"></i>
+                    <h3 th:text="${filtersApplied} ? 'No records match these filters' : 'No service records yet'">No records</h3>
+                    <p th:text="${filtersApplied} ? 'Try widening the date range or clearing a filter.' : 'Log oil changes, general services, tyre and battery replacements here.'">Text</p>
+                    <a th:if="${filtersApplied}" th:href="@{/services}" class="btn btn-light">Clear filters</a>
+                    <a th:unless="${filtersApplied}" th:href="@{/services/new}" class="btn btn-primary">Log service</a>
+                </div>
+
+                <div class="table-responsive" th:unless="${#lists.isEmpty(records)}">
+                    <table class="table table-app table-stack align-middle">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th>Service</th>
+                            <th class="text-end">Mileage</th>
+                            <th class="text-end">Cost</th>
+                            <th>Next due</th>
+                            <th class="text-end"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${records}">
+                            <td data-label="Date" class="num" th:text="${#temporals.format(s.serviceDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                            <td data-label="Vehicle">
+                                <a th:href="@{/vehicles/{id}(id=${s.vehicle.id})}" class="plate plate-sm" th:text="${s.vehicle.registrationNumber}">REG</a>
+                            </td>
+                            <td data-label="Service">
+                                <span th:text="${s.serviceType.displayName}">Type</span>
+                                <span class="cell-sub" th:if="${s.serviceCenter}" th:text="${s.serviceCenter}">Center</span>
+                            </td>
+                            <td data-label="Mileage" class="text-end num" th:text="|${#numbers.formatInteger(s.mileage, 1, 'COMMA')} km|">0 km</td>
+                            <td data-label="Cost" class="text-end num fw-semibold" th:text="|₹${#numbers.formatDecimal(s.cost, 1, 'COMMA', 2, 'POINT')}|">₹0</td>
+                            <td data-label="Next due">
+                                <span th:if="${s.nextServiceDate == null and s.nextServiceMileage == null}" class="text-muted">—</span>
+                                <span th:if="${s.nextServiceDate != null}" class="num" th:text="${#temporals.format(s.nextServiceDate, 'dd MMM yyyy')}">date</span>
+                                <span class="cell-sub num" th:if="${s.nextServiceMileage != null}"
+                                      th:text="|${#numbers.formatInteger(s.nextServiceMileage, 1, 'COMMA')} km|">km</span>
+                            </td>
+                            <td class="td-actions">
+                                <div class="table-actions">
+                                    <a th:href="@{/services/{id}/edit(id=${s.id})}" class="btn btn-light btn-icon btn-sm" title="Edit" aria-label="Edit record">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/services/{id}/delete(id=${s.id})}" method="post"
+                                          th:data-confirm="|Delete the ${s.serviceType.displayName} record from ${#temporals.format(s.serviceDate, 'dd MMM yyyy')}?|"
+                                          data-confirm-title="Delete service record?">
+                                        <button type="submit" class="btn btn-light btn-icon btn-sm text-danger" title="Delete" aria-label="Delete record">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

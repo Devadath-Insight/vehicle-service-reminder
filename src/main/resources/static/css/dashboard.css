@@ -1,0 +1,206 @@
+/* =====================================================================
+   Dashboard, reports and detail page components
+   ===================================================================== */
+
+/* ---------- Stat cards ---------- */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.stat-grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+    background: var(--vs-surface);
+    border: 1px solid var(--vs-border);
+    border-radius: var(--vs-radius-lg);
+    box-shadow: var(--vs-shadow);
+    color: inherit;
+}
+a.stat-card:hover { border-color: var(--vs-primary); text-decoration: none; }
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: var(--vs-primary-soft);
+    color: var(--vs-primary-dark);
+}
+.stat-icon.is-warning { background: var(--vs-warning-soft); color: #B45309; }
+.stat-icon.is-danger { background: var(--vs-danger-soft); color: #B91C1C; }
+.stat-icon.is-success { background: var(--vs-success-soft); color: #15803D; }
+.stat-icon.is-dark { background: #E5E7EB; color: var(--vs-dark); }
+.stat-label { color: var(--vs-muted); font-size: .9rem; font-weight: 500; }
+.stat-value {
+    font-family: var(--vs-font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--vs-dark);
+    font-variant-numeric: tabular-nums;
+}
+.stat-note { color: var(--vs-muted); font-size: .82rem; margin-top: 2px; }
+.stat-card.is-alert { border-color: #FCA5A5; background: linear-gradient(0deg, #FFFBFB, #FFFBFB); }
+.stat-card.is-alert .stat-value { color: var(--vs-danger); }
+.stat-compact .stat-value { font-size: 1.5rem; }
+
+/* ---------- Garage strip (vehicles on dashboard) ---------- */
+.garage-strip { display: flex; flex-wrap: wrap; gap: 10px; }
+.garage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--vs-border);
+    border-radius: var(--vs-radius);
+    background: #fff;
+    color: var(--vs-text);
+}
+.garage-item:hover { border-color: var(--vs-primary); text-decoration: none; }
+.garage-item small { display: block; color: var(--vs-muted); }
+
+/* ---------- Reminder list ---------- */
+.reminder-list { list-style: none; margin: 0; padding: 0; }
+.reminder-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--vs-border);
+}
+.reminder-item:last-child { border-bottom: 0; }
+.reminder-item.is-overdue { box-shadow: inset 3px 0 0 var(--vs-danger); }
+.reminder-item.is-due-soon { box-shadow: inset 3px 0 0 var(--vs-warning); }
+.reminder-main { flex: 1; min-width: 0; }
+.reminder-title { font-weight: 600; color: var(--vs-dark); }
+.reminder-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 4px; font-size: .88rem; }
+.reminder-due { display: flex; flex-direction: column; gap: 2px; font-size: .9rem; }
+.due-line { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.due-line i { color: var(--vs-muted); }
+.list-group-label { padding: 10px 20px 4px; color: var(--vs-muted); font-size: .82rem; font-weight: 600; }
+
+/* ---------- Status filter tabs (reminders) ---------- */
+.status-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.status-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--vs-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--vs-text);
+    font-weight: 500;
+    font-size: .92rem;
+}
+.status-tab:hover { border-color: var(--vs-primary); text-decoration: none; }
+.status-tab.active { background: var(--vs-dark); border-color: var(--vs-dark); color: #fff; }
+.status-tab .count {
+    min-width: 22px;
+    text-align: center;
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: .78rem;
+    background: #F3F4F6;
+    color: var(--vs-dark);
+}
+.status-tab.active .count { background: rgba(255, 255, 255, .18); color: #fff; }
+
+/* ---------- Vehicle cards ---------- */
+.vehicle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.vehicle-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    background: var(--vs-surface);
+    border: 1px solid var(--vs-border);
+    border-radius: var(--vs-radius-lg);
+    box-shadow: var(--vs-shadow);
+}
+.vehicle-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.vehicle-name { font-size: 1.3rem; margin: 0; }
+.vehicle-name a { color: var(--vs-dark); }
+.vehicle-specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.vehicle-specs dt { font-weight: 500; color: var(--vs-muted); font-size: .8rem; }
+.vehicle-specs dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vehicle-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 14px;
+    margin-top: auto;
+    border-top: 1px solid var(--vs-border);
+}
+.vehicle-card-actions form { margin: 0; }
+
+/* ---------- Vehicle details header ---------- */
+.vehicle-hero { padding: 24px; margin-bottom: 20px; }
+.vehicle-hero-top { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
+.vehicle-hero h2 { font-size: 1.7rem; margin: 12px 0 0; }
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+    margin: 22px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--vs-border);
+}
+.spec-grid dt { font-weight: 500; color: var(--vs-muted); font-size: .82rem; }
+.spec-grid dd { margin: 0; font-weight: 600; font-size: 1.02rem; }
+
+/* ---------- Service history timeline ---------- */
+.timeline { list-style: none; margin: 0; padding: 8px 20px 8px 20px; }
+.timeline-item { position: relative; padding: 14px 0 14px 30px; border-left: 2px solid var(--vs-border); margin-left: 7px; }
+.timeline-item:last-child { border-left-color: transparent; }
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 18px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--vs-primary);
+}
+.timeline-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; }
+.timeline-date { font-family: var(--vs-font-display); font-weight: 600; font-size: 1.05rem; color: var(--vs-dark); }
+.timeline-cost { font-family: var(--vs-font-display); font-weight: 700; font-size: 1.05rem; }
+.timeline-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--vs-muted); font-size: .9rem; margin-top: 4px; }
+.timeline-desc { margin: 6px 0 0; max-width: 72ch; }
+
+/* ---------- Charts ---------- */
+.chart-box { position: relative; height: 280px; width: 100%; }
+.chart-box-tall { height: 340px; }
+.chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--vs-muted); }
+
+/* ---------- Money list ---------- */
+.money-list { list-style: none; margin: 0; padding: 0; }
+.money-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--vs-border);
+}
+.money-list li:last-child { border-bottom: 0; }
+.money { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar-track { height: 6px; border-radius: 3px; background: #F3F4F6; margin-top: 6px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--vs-primary); border-radius: 3px; }
+
+/* ---------- Profile ---------- */
+.profile-card { text-align: center; padding: 28px 20px; }
+.profile-card h2 { font-size: 1.4rem; margin: 14px 0 2px; }
+.profile-facts { text-align: left; margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--vs-border); display: grid; gap: 12px; }
+.profile-facts dt { font-weight: 500; color: var(--vs-muted); font-size: .82rem; }
+.profile-facts dd { margin: 0; font-weight: 500; word-break: break-word; }

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Reports')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('reports')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Reports')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-head">
+                <div>
+                    <h2 class="h4 mb-1">Reports &amp; statistics</h2>
+                    <p>Maintenance expense = service visit costs + other expenses (fuel, insurance, repairs...).</p>
+                </div>
+            </div>
+
+            <!-- Headline numbers -->
+            <section class="stat-grid stat-grid-6 stat-compact" aria-label="Totals">
+                <div class="stat-card">
+                    <span class="stat-icon is-success"><i class="bi bi-currency-rupee"></i></span>
+                    <div>
+                        <div class="stat-label">Total maintenance</div>
+                        <div class="stat-value num" th:text="|₹${#numbers.formatDecimal(totalMaintenance, 1, 'COMMA', 0, 'POINT')}|">₹0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon"><i class="bi bi-wrench-adjustable"></i></span>
+                    <div>
+                        <div class="stat-label">Service expense</div>
+                        <div class="stat-value num" th:text="|₹${#numbers.formatDecimal(totalService, 1, 'COMMA', 0, 'POINT')}|">₹0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon is-dark"><i class="bi bi-wallet2"></i></span>
+                    <div>
+                        <div class="stat-label">Other expenses</div>
+                        <div class="stat-value num" th:text="|₹${#numbers.formatDecimal(totalOther, 1, 'COMMA', 0, 'POINT')}|">₹0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon"><i class="bi bi-journal-check"></i></span>
+                    <div>
+                        <div class="stat-label">Services done</div>
+                        <div class="stat-value num" th:text="${serviceCount}">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon is-warning"><i class="bi bi-calendar-check"></i></span>
+                    <div>
+                        <div class="stat-label">Upcoming reminders</div>
+                        <div class="stat-value num" th:text="${upcomingCount}">0</div>
+                    </div>
+                </div>
+                <div class="stat-card" th:classappend="${overdueCount > 0} ? 'is-alert'">
+                    <span class="stat-icon is-danger"><i class="bi bi-exclamation-octagon"></i></span>
+                    <div>
+                        <div class="stat-label">Overdue reminders</div>
+                        <div class="stat-value num" th:text="${overdueCount}">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <section class="panel">
+                        <div class="panel-header"><h2 class="panel-title">Monthly expense (last 12 months)</h2></div>
+                        <div class="panel-body">
+                            <div class="chart-box chart-box-tall">
+                                <canvas id="monthlyChart" role="img" aria-label="Monthly maintenance expense bar chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-lg-6">
+                    <section class="panel h-100">
+                        <div class="panel-header"><h2 class="panel-title">Expense by category</h2></div>
+                        <div class="panel-body">
+                            <div class="chart-box">
+                                <canvas id="categoryChart" role="img" aria-label="Expense by category doughnut chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-lg-6">
+                    <section class="panel h-100">
+                        <div class="panel-header"><h2 class="panel-title">Services by type</h2></div>
+                        <div class="panel-body">
+                            <div class="chart-box">
+                                <canvas id="serviceTypeChart" role="img" aria-label="Number of services by type chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Vehicle-wise expense (table + chart) -->
+                <div class="col-lg-6">
+                    <section class="panel h-100">
+                        <div class="panel-header"><h2 class="panel-title">Expense by vehicle</h2></div>
+                        <div th:if="${#maps.isEmpty(expenseByVehicle)}" class="empty-state">
+                            <i class="bi bi-car-front"></i>
+                            <h3>No vehicles yet</h3>
+                            <p>Add a vehicle and record services or expenses to see this breakdown.</p>
+                        </div>
+                        <ul class="money-list" th:unless="${#maps.isEmpty(expenseByVehicle)}">
+                            <li th:each="entry : ${expenseByVehicle}">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <strong th:text="${entry.key}">Vehicle</strong>
+                                        <span class="money num" th:text="|₹${#numbers.formatDecimal(entry.value, 1, 'COMMA', 2, 'POINT')}|">₹0</span>
+                                    </div>
+                                    <div class="bar-track" th:if="${totalMaintenance > 0}">
+                                        <div class="bar-fill"
+                                             th:style="|width: ${#numbers.formatDecimal(entry.value * 100 / totalMaintenance, 1, 1, 'POINT')}%|"></div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="col-lg-6">
+                    <section class="panel h-100">
+                        <div class="panel-header"><h2 class="panel-title">Category breakdown</h2></div>
+                        <ul class="money-list">
+                            <li th:each="entry : ${expenseByCategory}">
+                                <span th:text="${entry.key}">Category</span>
+                                <span class="money num" th:text="|₹${#numbers.formatDecimal(entry.value, 1, 'COMMA', 2, 'POINT')}|">₹0</span>
+                            </li>
+                            <li>
+                                <strong>Total</strong>
+                                <strong class="money num" th:text="|₹${#numbers.formatDecimal(totalMaintenance, 1, 'COMMA', 2, 'POINT')}|">₹0</strong>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <section class="panel">
+                        <div class="panel-header"><h2 class="panel-title">Vehicle comparison</h2></div>
+                        <div class="panel-body">
+                            <div class="chart-box">
+                                <canvas id="vehicleChart" role="img" aria-label="Total expense per vehicle chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    window.chartData = {
+        monthlyLabels: /*[[${monthlyLabels}]]*/ [],
+        monthlyValues: /*[[${monthlyValues}]]*/ [],
+        categoryLabels: /*[[${categoryLabels}]]*/ [],
+        categoryValues: /*[[${categoryValues}]]*/ [],
+        serviceTypeLabels: /*[[${serviceTypeLabels}]]*/ [],
+        serviceTypeValues: /*[[${serviceTypeValues}]]*/ [],
+        vehicleLabels: /*[[${vehicleLabels}]]*/ [],
+        vehicleValues: /*[[${vehicleValues}]]*/ []
+    };
+</script>
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

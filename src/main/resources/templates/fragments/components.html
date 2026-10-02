@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Coloured status badge. Usage: th:replace="~{fragments/components :: statusBadge(${reminder.status})}" -->
+<span th:fragment="statusBadge(status)" class="status-badge"
+      th:classappend="${status.badgeClass}" th:text="${status.displayName}">Upcoming</span>
+
+<!-- Due date / due mileage lines for a reminder, with "in 5 days" / "1,200 km left" hints. -->
+<div th:fragment="reminderDue(r)" class="reminder-due">
+    <span th:if="${r.dueDate != null}" class="due-line">
+        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+        <span th:text="${#temporals.format(r.dueDate, 'dd MMM yyyy')}">01 Jan 2026</span>
+        <small th:if="${r.status.active}" class="text-muted"
+               th:text="${r.daysUntilDue gt 1} ? |in ${r.daysUntilDue} days|
+                        : (${r.daysUntilDue == 1} ? 'tomorrow'
+                        : (${r.daysUntilDue == 0} ? 'today'
+                        : (${r.daysUntilDue == -1} ? '1 day overdue' : |${-r.daysUntilDue} days overdue|)))">in 5 days</small>
+    </span>
+    <span th:if="${r.dueMileage != null}" class="due-line">
+        <i class="bi bi-speedometer" aria-hidden="true"></i>
+        <span th:text="|${#numbers.formatInteger(r.dueMileage, 1, 'COMMA')} km|">45,000 km</span>
+        <small th:if="${r.status.active and r.kmRemaining != null}" class="text-muted"
+               th:text="${r.kmRemaining gt 0} ? |${#numbers.formatInteger(r.kmRemaining, 1, 'COMMA')} km left|
+                        : |${#numbers.formatInteger(-r.kmRemaining, 1, 'COMMA')} km past due|">1,200 km left</small>
+    </span>
+</div>
+
+</body>
+</html>

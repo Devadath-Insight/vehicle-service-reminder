@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Profile')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar('profile')}"></aside>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header th:replace="~{fragments/navbar :: navbar('Profile')}"></header>
+
+        <main class="app-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="row g-4">
+                <!-- Account summary -->
+                <div class="col-lg-4">
+                    <section class="panel profile-card">
+                        <span class="avatar avatar-lg" th:text="${user.initial}">S</span>
+                        <h2 th:text="${user.fullName}">Name</h2>
+                        <p class="text-muted mb-0" th:text="${user.email}">email</p>
+                        <dl class="profile-facts">
+                            <div><dt>Email</dt><dd th:text="${user.email}">email</dd></div>
+                            <div><dt>Phone</dt><dd th:text="${user.phone}">phone</dd></div>
+                            <div><dt>Member since</dt><dd th:text="${user.createdAt != null} ? ${#temporals.format(user.createdAt, 'dd MMM yyyy')} : '—'">date</dd></div>
+                            <div><dt>Vehicles</dt><dd th:text="${vehicleCount}">0</dd></div>
+                        </dl>
+                    </section>
+                </div>
+
+                <div class="col-lg-8">
+                    <!-- Update name / phone -->
+                    <section class="panel mb-4">
+                        <div class="panel-header"><h2 class="panel-title">Personal details</h2></div>
+                        <div class="panel-body">
+                            <form th:action="@{/profile}" th:object="${profileForm}" method="post" class="needs-validation" novalidate>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="fullName" class="form-label">Full name<span class="req">*</span></label>
+                                        <input type="text" th:field="*{fullName}" class="form-control" th:errorclass="is-invalid"
+                                               maxlength="100" autocomplete="name" required>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="phone" class="form-label">Phone<span class="req">*</span></label>
+                                        <input type="tel" th:field="*{phone}" class="form-control" th:errorclass="is-invalid"
+                                               pattern="^\+?[0-9]{10,15}$" autocomplete="tel" required>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="emailReadonly" class="form-label">Email</label>
+                                        <input type="email" id="emailReadonly" class="form-control" th:value="${user.email}" readonly disabled>
+                                        <div class="form-text">Email is your login ID and cannot be changed.</div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save details</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <!-- Change password -->
+                    <section class="panel" id="password">
+                        <div class="panel-header"><h2 class="panel-title">Change password</h2></div>
+                        <div class="panel-body">
+                            <form th:action="@{/profile/password}" th:object="${passwordForm}" method="post" class="needs-validation" novalidate>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="currentPassword" class="form-label">Current password<span class="req">*</span></label>
+                                        <input type="password" id="currentPassword" name="currentPassword" class="form-control"
+                                               th:classappend="${#fields.hasErrors('currentPassword')} ? 'is-invalid'"
+                                               autocomplete="current-password" required
+                                               th:autofocus="${openPasswordSection != null}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('currentPassword')}" th:errors="*{currentPassword}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="newPassword" class="form-label">New password<span class="req">*</span></label>
+                                        <input type="password" id="newPassword" name="newPassword" class="form-control"
+                                               th:classappend="${#fields.hasErrors('newPassword')} ? 'is-invalid'"
+                                               autocomplete="new-password" minlength="8" maxlength="64" required>
+                                        <div class="form-text">At least 8 characters.</div>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="confirmPassword" class="form-label">Confirm new password<span class="req">*</span></label>
+                                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                                               th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid'"
+                                               autocomplete="new-password" data-match="#newPassword" required>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Change password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+</body>
+</html>

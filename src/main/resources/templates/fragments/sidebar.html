@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Dark sidebar. activePage highlights the current link. Usage: th:replace="~{fragments/sidebar :: sidebar('vehicles')}" -->
+<aside th:fragment="sidebar(activePage)" class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+        <a th:href="@{/dashboard}" class="brand-link">
+            <span class="brand-mark"><i class="bi bi-speedometer2"></i></span>
+            <span class="brand-text"><strong>Vehicle Service</strong><small>Reminder System</small></span>
+        </a>
+        <button type="button" class="btn-close btn-close-white d-lg-none" data-sidebar-close aria-label="Close menu"></button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a th:href="@{/dashboard}" class="nav-item-link" th:classappend="${activePage == 'dashboard'} ? 'active'">
+            <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+        </a>
+        <a th:href="@{/vehicles}" class="nav-item-link" th:classappend="${activePage == 'vehicles'} ? 'active'">
+            <i class="bi bi-car-front"></i><span>My Vehicles</span>
+        </a>
+        <a th:href="@{/services}" class="nav-item-link" th:classappend="${activePage == 'services'} ? 'active'">
+            <i class="bi bi-wrench-adjustable"></i><span>Service Records</span>
+        </a>
+        <a th:href="@{/reminders}" class="nav-item-link" th:classappend="${activePage == 'reminders'} ? 'active'">
+            <i class="bi bi-bell"></i><span>Reminders</span>
+        </a>
+        <a th:href="@{/expenses}" class="nav-item-link" th:classappend="${activePage == 'expenses'} ? 'active'">
+            <i class="bi bi-wallet2"></i><span>Expenses</span>
+        </a>
+        <a th:href="@{/reports}" class="nav-item-link" th:classappend="${activePage == 'reports'} ? 'active'">
+            <i class="bi bi-bar-chart-line"></i><span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">Account</div>
+        <a th:href="@{/profile}" class="nav-item-link" th:classappend="${activePage == 'profile'} ? 'active'">
+            <i class="bi bi-person-circle"></i><span>Profile</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="nav-item-link"><i class="bi bi-box-arrow-left"></i><span>Log out</span></button>
+        </form>
+    </div>
+</aside>
+</body>
+</html>

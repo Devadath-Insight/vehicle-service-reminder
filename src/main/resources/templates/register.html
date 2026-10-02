@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Create account')}"></head>
+<body class="auth-body">
+<div class="auth-shell">
+    <section class="auth-aside">
+        <a th:href="@{/login}" class="auth-brand">
+            <span class="brand-mark"><i class="bi bi-speedometer2"></i></span>
+            <span class="brand-text"><strong>Vehicle Service</strong><small>Reminder System</small></span>
+        </a>
+        <div class="auth-pitch">
+            <h2>Know what your vehicle needs before it needs it.</h2>
+            <ul class="auth-points">
+                <li><i class="bi bi-car-front"></i>Add every car, bike or scooter you own</li>
+                <li><i class="bi bi-journal-text"></i>Keep a full service history per vehicle</li>
+                <li><i class="bi bi-lock"></i>Your records are visible only to you</li>
+            </ul>
+        </div>
+        <span class="plate plate-xl" aria-hidden="true">KL 07 CD 4521</span>
+    </section>
+
+    <main class="auth-main">
+        <div class="auth-card">
+            <h1 class="auth-title">Create account</h1>
+            <p class="auth-subtitle">It takes under a minute.</p>
+
+            <form th:action="@{/register}" th:object="${registrationRequest}" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full name<span class="req">*</span></label>
+                    <input type="text" th:field="*{fullName}" class="form-control" th:errorclass="is-invalid"
+                           autocomplete="name" maxlength="100" required>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email<span class="req">*</span></label>
+                    <input type="email" th:field="*{email}" class="form-control" th:errorclass="is-invalid"
+                           autocomplete="email" maxlength="150" required>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone<span class="req">*</span></label>
+                    <input type="tel" th:field="*{phone}" class="form-control" th:errorclass="is-invalid"
+                           autocomplete="tel" placeholder="9876543210" pattern="^\+?[0-9]{10,15}$" required>
+                    <div class="form-text">10 to 15 digits. You can start with +.</div>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <label for="password" class="form-label">Password<span class="req">*</span></label>
+                        <input type="password" id="password" name="password" class="form-control"
+                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
+                               autocomplete="new-password" minlength="8" maxlength="64" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="confirmPassword" class="form-label">Confirm password<span class="req">*</span></label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                               th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid'"
+                               autocomplete="new-password" data-match="#password" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                    </div>
+                    <div class="col-12"><div class="form-text mt-0">At least 8 characters.</div></div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">Create account</button>
+            </form>
+
+            <p class="auth-switch">Already registered? <a th:href="@{/login}">Log in</a></p>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/validation.js}"></script>
+</body>
+</html>
